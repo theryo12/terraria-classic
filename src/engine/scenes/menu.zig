@@ -51,13 +51,19 @@ pub const MenuScene = struct {
         return self;
     }
 
-    fn buttonClickHandler(entity: ecs.Entity, event: ButtonEvent, user_data: ?*anyopaque) void {
+    fn buttonHandler(entity: ecs.Entity, event: ButtonEvent, user_data: ?*anyopaque) void {
         _ = entity;
         if (event == .click) {
             if (user_data) |data| {
                 const engine: *Engine = @ptrCast(@alignCast(data));
                 const empty_scene = EmptyScene.create(engine.allocator) catch return;
                 engine.scene_manager.loadScenePtr(&empty_scene.scene) catch return;
+            }
+        }
+        if (event == .hover_start) {
+            if (user_data) |data| {
+                const engine: *Engine = @ptrCast(@alignCast(data));
+                engine.audio.playSound("menu_tick");
             }
         }
     }
@@ -72,6 +78,16 @@ pub const MenuScene = struct {
         defer scene_ptr.allocator.free(logo_path);
 
         scene_ptr.logo_texture = try scene_ptr.engine.resource_manager.loadTexture(logo_path);
+
+        // Load and play menu music
+        try scene_ptr.engine.audio.loadMusic("resources/sounds/music/Music_2.ogg");
+        scene_ptr.engine.audio.setLooping(true);
+        scene_ptr.engine.audio.setVolume(0.5);
+        scene_ptr.engine.audio.playMusic();
+
+        // Button sounds
+        try scene_ptr.engine.audio.loadSound("menu_tick", "resources/sounds/Menu_Tick.wav");
+        scene_ptr.engine.audio.setSoundVolumeByName("menu_tick", 2);
 
         const screen_width = @as(f32, @floatFromInt(rl.getScreenWidth()));
         const screen_height = @as(f32, @floatFromInt(rl.getScreenHeight()));
@@ -101,6 +117,8 @@ pub const MenuScene = struct {
             },
             .origin = .{ .x = 0, .y = 0 },
             .layer = 0,
+            .tint = rl.Color.white,
+            .opacity = 1.0,
         });
 
         const play_button = try scene_base.registry.create();
@@ -119,20 +137,17 @@ pub const MenuScene = struct {
             .hover_color = rl.Color.yellow,
             .hover_scale = 1.2,
             .animation_speed = 0.2,
-            .on_event = buttonClickHandler,
+            .on_event = buttonHandler,
             .user_data = scene_ptr.engine,
         });
 
-        try scene_base.registry.add(play_button, ecs.Text{
-            .content = "Play",
-            .font = scene_ptr.menu_font,
-            .font_size = 40,
-            .spacing = 2,
-        });
+        try scene_base.registry.add(play_button, ecs.Text{ .content = "Play", .font = scene_ptr.menu_font, .font_size = 40, .spacing = 2 });
     }
 
     fn onUnload(scene_base: *Scene) void {
-        _ = scene_base;
+        const scene_ptr: *MenuScene = @alignCast(@ptrCast(scene_base));
+        // Stop the menu music when unloading the scene
+        scene_ptr.engine.audio.stopMusic();
     }
 
     fn onUpdate(scene_base: *Scene, delta_time: f32) void {

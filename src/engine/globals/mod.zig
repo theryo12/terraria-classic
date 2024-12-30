@@ -50,6 +50,5 @@ pub const Globals = struct {
 
     pub fn draw(self: *Self) void {
         self.render_system.base.vtable.draw(&self.render_system.base);
-        self.cursor.draw();
     }
 };

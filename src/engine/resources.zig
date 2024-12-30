@@ -105,6 +105,53 @@ pub const ResourceManager = struct {
         return font;
     }
 
+    pub fn loadSound(self: *Self, path: []const u8) !rl.Sound {
+        // Build full path first
+        var path_buffer: [std.fs.MAX_PATH_BYTES]u8 = undefined;
+        const full_path = try std.fmt.bufPrintZ(&path_buffer, "{s}/{s}", .{ self.base_path, path });
+
+        // Load sound first
+        const sound = rl.loadSound(full_path);
+        if (sound.frameCount == 0) return ResourceError.LoadError;
+
+        // Store in cache with duplicated path as key
+        const key = try self.allocator.dupe(u8, path);
+        errdefer self.allocator.free(key);
+
+        try self.resources.put(key, Resource{
+            .resource_type = .sound,
+            .data = .{ .sound = sound },
+        });
+
+        return sound;
+    }
+
+    pub fn loadMusic(self: *Self, path: []const u8) !rl.Music {
+        // Build full path first
+        var path_buffer: [std.fs.MAX_PATH_BYTES]u8 = undefined;
+        const full_path = try std.fmt.bufPrintZ(&path_buffer, "{s}/{s}", .{ self.base_path, path });
+
+        std.debug.print("Attempting to load music from path: {s}\n", .{full_path});
+
+        // Load music first
+        const music = rl.loadMusicStream(full_path);
+        if (music.frameCount == 0) {
+            std.debug.print("Failed to load music stream\n", .{});
+            return ResourceError.LoadError;
+        }
+
+        // Store in cache with duplicated path as key
+        const key = try self.allocator.dupe(u8, path);
+        errdefer self.allocator.free(key);
+
+        try self.resources.put(key, Resource{
+            .resource_type = .music,
+            .data = .{ .music = music },
+        });
+
+        return music;
+    }
+
     pub fn unloadResource(self: *Self, path: []const u8) void {
         if (self.resources.fetchRemove(path)) |entry| {
             // Free the stored path key

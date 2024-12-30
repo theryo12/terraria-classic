@@ -115,7 +115,7 @@ fn initCursor(registry: *ecs.Registry, engine: *Engine) !void {
         },
         .origin = .{ .x = 0, .y = 0 },
         .tint = rl.Color.red,
-        .layer = 1000,
+        .layer = 10000,
     });
 
     rl.hideCursor();

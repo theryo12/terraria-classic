@@ -5,6 +5,7 @@ const SceneManager = @import("scene.zig").SceneManager;
 const Globals = @import("globals/mod.zig").Globals;
 const ResourceManager = @import("resources.zig").ResourceManager;
 const Window = @import("window.zig").Window;
+const AudioEngine = @import("audio/mod.zig").AudioEngine;
 
 pub const Engine = struct {
     const Self = @This();
@@ -14,6 +15,7 @@ pub const Engine = struct {
     globals: *Globals,
     resource_manager: ResourceManager,
     window: Window,
+    audio: *AudioEngine,
 
     pub fn init(allocator: std.mem.Allocator) !Self {
         const window = Window.init();
@@ -27,10 +29,13 @@ pub const Engine = struct {
             .globals = undefined,
             .resource_manager = resource_manager,
             .window = window,
+            .audio = undefined,
         };
 
         self.globals = try Globals.init(allocator, &self);
         errdefer self.globals.deinit();
+
+        self.audio = try AudioEngine.init(allocator);
 
         return self;
     }
@@ -40,19 +45,21 @@ pub const Engine = struct {
         self.globals.deinit();
         self.resource_manager.deinit();
         self.window.deinit();
+        self.audio.deinit();
     }
 
     pub fn update(self: *Self) !void {
         const delta_time = rl.getFrameTime();
         try self.scene_manager.update(delta_time);
-        self.globals.update(delta_time);
         self.window.update();
+        self.globals.update(delta_time);
+        self.audio.update();
     }
 
     pub fn draw(self: *Self) void {
         rl.beginDrawing();
         defer rl.endDrawing();
-
+        // TODO: make it so the draw layer matters, not draw call order
         self.scene_manager.draw();
         self.globals.draw();
     }
