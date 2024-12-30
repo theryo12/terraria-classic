@@ -1,0 +1,27 @@
+{
+  window: {
+    width: 800
+    height: 600
+    fullscreen: false
+    resizable: true
+  }
+
+  graphics: {
+    msaa_4x: true
+    vsync: true
+  }
+
+  audio: {
+    volume: {
+      master: 0
+      music: 0
+      sfx: 1
+    }
+    sample_rate: 48000
+  }
+
+  input: {
+    exit_key: 256
+    gamepad_enabled: true
+  }
+}

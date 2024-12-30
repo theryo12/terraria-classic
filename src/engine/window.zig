@@ -23,27 +23,28 @@ pub const Window = struct {
     state: WindowState,
     on_resize: ?*const fn (i32, i32) void,
 
-    pub fn init() Self {
-        const conf = config.WindowConfig;
+    pub fn init(game_config: config.GameConfig) Self {
+        const window_conf = game_config.window;
+        const graphics_conf = game_config.graphics;
 
-        if (conf.vsync) {
+        if (graphics_conf.vsync) {
             rl.setConfigFlags(.{ .vsync_hint = true });
         }
 
-        rl.initWindow(conf.width, conf.height, conf.title);
-        rl.setTargetFPS(conf.target_fps);
-        rl.setWindowMinSize(conf.min_width, conf.min_height);
+        rl.initWindow(window_conf.width, window_conf.height, window_conf.title);
+        rl.setTargetFPS(window_conf.target_fps);
+        rl.setWindowMinSize(window_conf.min_width, window_conf.min_height);
 
         return Self{
             .state = .{
-                .width = conf.width,
-                .height = conf.height,
-                .mode = .windowed,
-                .vsync = conf.vsync,
+                .width = window_conf.width,
+                .height = window_conf.height,
+                .mode = if (window_conf.fullscreen) .fullscreen else .windowed,
+                .vsync = graphics_conf.vsync,
                 .previous_pos = .{ .x = 0, .y = 0 },
                 .previous_size = .{
-                    .x = @floatFromInt(conf.width),
-                    .y = @floatFromInt(conf.height),
+                    .x = @floatFromInt(window_conf.width),
+                    .y = @floatFromInt(window_conf.height),
                 },
             },
             .on_resize = null,

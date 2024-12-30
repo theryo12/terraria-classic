@@ -82,12 +82,10 @@ pub const MenuScene = struct {
         // Load and play menu music
         try scene_ptr.engine.audio.loadMusic("resources/sounds/music/Music_2.ogg");
         scene_ptr.engine.audio.setLooping(true);
-        scene_ptr.engine.audio.setVolume(0.5);
         scene_ptr.engine.audio.playMusic();
 
         // Button sounds
         try scene_ptr.engine.audio.loadSound("menu_tick", "resources/sounds/Menu_Tick.wav");
-        scene_ptr.engine.audio.setSoundVolumeByName("menu_tick", 2);
 
         const screen_width = @as(f32, @floatFromInt(rl.getScreenWidth()));
         const screen_height = @as(f32, @floatFromInt(rl.getScreenHeight()));
@@ -148,6 +146,8 @@ pub const MenuScene = struct {
         const scene_ptr: *MenuScene = @alignCast(@ptrCast(scene_base));
         // Stop the menu music when unloading the scene
         scene_ptr.engine.audio.stopMusic();
+        // And unload the menu tick sound
+        scene_ptr.engine.audio.unloadSound("menu_tick");
     }
 
     fn onUpdate(scene_base: *Scene, delta_time: f32) void {
